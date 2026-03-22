@@ -6,7 +6,7 @@ import os
 from werkzeug.utils import secure_filename
 
 UPLOAD_FOLDER = 'uploads'
-ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'doc', 'docx'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
 app = Flask(__name__)
 app.secret_key = 'demo_secret_key_123' 
@@ -47,13 +47,14 @@ def get_time_estimate(q_id, questions, memo=None):
 # --- USER ROUTES ---
 @app.route('/')
 def index():
-    session['history'], session['summary'] = [], []
+    session['history'], session['summary'], session['uploads'] = [], [], []
     return redirect(url_for('ask_question', q_id='start'))
 
 @app.route('/question/<q_id>')
 def ask_question(q_id):
     questions = load_questions()
     data = questions.get(q_id)
+    print(f"\n>>> ask_question: q_id={q_id}, data={data}")
     if not data: return f"Error: ID '{q_id}' not found.", 404
     
     html_desc = markdown.markdown(data.get('description', ""))
@@ -96,15 +97,25 @@ def download_results(fmt):
     if uploads:
         content += "UPLOADED EVIDENCE:\n" + "-"*18 + "\n"
         for upload in uploads:
-            content += f"• {upload['original_name']} (for question: {upload['q_id']})\n"
-        content += "\n*Note: Files are stored locally and referenced in this summary*\n"
+            content += f"- {upload['original_name']} (for question: {upload['q_id']})\n"
+
+        
     
     if fmt == 'txt':
         return Response(content, mimetype="text/plain", headers={"Content-disposition": "attachment; filename=results.txt"})
     
-    pdf = FPDF(); pdf.add_page(); pdf.set_font("Arial", size=12)
+    pdf = FPDF(); pdf.add_page(); pdf.set_font("Helvetica", size=12)
     pdf.multi_cell(0, 10, content)
-    response = make_response(pdf.output(dest='S').encode('latin-1'))
+    
+    # Add uploaded images to the PDF
+    for upload in uploads:
+        filename = upload['filename']
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')) and os.path.exists(filepath):
+            pdf.add_page()
+            pdf.image(filepath, x=10, y=10, w=180)  #IU Adjust size as needed
+    
+    response = make_response(pdf.output(dest='S'))
     response.headers.set('Content-Type', 'application/pdf')
     response.headers.set('Content-Disposition', 'attachment', filename='results.pdf')
     return response
@@ -164,24 +175,36 @@ def delete_question(q_id):
 # --- FILE UPLOAD ROUTE ---
 @app.route('/upload/<q_id>', methods=['GET', 'POST'])
 def upload_file(q_id):
+    print(f"\n{'='*50}")
+    print(f"upload_file() called - q_id={q_id}, method={request.method}")
+    print(f"request.files: {request.files}")
+    print(f"request.form: {request.form}")
+    print(f"{'='*50}\n")
     if request.method == 'POST':
+        print(f"Upload POST received for q_id: {q_id}")
         if 'file' not in request.files:
+            print("No 'file' in request.files")
             flash('No file selected')
             return redirect(request.url)
         
         file = request.files['file']
+        print(f"File object: {file}, filename: {file.filename}")
         if file.filename == '':
+            print("Filename is empty")
             flash('No file selected')
             return redirect(request.url)
         
         if file and allowed_file(file.filename):
+            print(f"File allowed: {file.filename}")
             filename = secure_filename(file.filename)
             # Create unique filename with session ID
             session_id = session.get('session_id', 'default')
             unique_filename = f"{session_id}_{q_id}_{filename}"
             os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+            print(f"Saving to: {file_path}")
             file.save(file_path)
+            print("File saved successfully")
             
             # Store file reference in session
             uploads = session.get('uploads', [])
@@ -191,9 +214,12 @@ def upload_file(q_id):
                 'original_name': file.filename
             })
             session['uploads'] = uploads
+            print(f"Session uploads updated: {session['uploads']}")
             
             flash('File uploaded successfully')
             return redirect(url_for('ask_question', q_id=q_id))
+        else:
+            print(f"File not allowed or invalid: {file.filename}")
     
     return render_template('uploads.html', q_id=q_id, step=len(session.get('history', [])) + 1)
 
