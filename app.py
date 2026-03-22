@@ -85,6 +85,8 @@ def go_back():
 @app.route('/download/<fmt>')
 def download_results(fmt):
     summary = session.get('summary', [])
+    if not summary:
+        return "No data to download. Start the quiz first!", 400
     uploads = session.get('uploads', [])
     
     content = "DECISION SUMMARY\n" + "="*20 + "\n\n"
