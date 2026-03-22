@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Decision Demo</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+</head>
+<body>
+    <header>
+        <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #666;">
+            <span>Step {{ step }}</span>
+            {% if not is_result %}<span>Est. Time Remaining: <strong>{{ time_left }}</strong></span>{% endif %}
+        </div>
+        <progress value="{{ progress }}" max="100"></progress>
+    </header>
+    <main>
+        <h1>{{ question }}</h1>
+        {% if description %}<div style="background: #f9f9f9; padding: 1rem; border-left: 4px solid #0076d1; margin-bottom: 1.5rem;">{{ description | safe }}</div>{% endif %}
+        {% if not is_result %}
+            {% for opt in options %}
+                <a href="{{ url_for('select_option', current_id=q_id, next_id=opt.next_id, choice_text=opt.text) }}">
+                    <button style="width: 100%; text-align: left; margin-bottom: 10px;">{{ opt.text }}</button>
+                </a>
+            {% endfor %}
+        {% else %}
+            <div style="text-align: center; margin-top: 2rem; border-top: 1px solid #eee; padding-top: 2rem;">
+                <h3>🎉 Workflow Complete</h3>
+                <a href="{{ url_for('download_results', fmt='txt') }}"><button>Download .TXT</button></a>
+                <a href="{{ url_for('download_results', fmt='pdf') }}"><button>Download .PDF</button></a>
+            </div>
+        {% endif %}
+    </main>
+    <footer style="margin-top: 3rem; display: flex; gap: 10px;">
+        {% if step > 1 %}<a href="{{ url_for('go_back') }}"><button style="background: #666; border: none;">← Back</button></a>{% endif %}
+        <a href="{{ url_for('index') }}"><button style="background: #a00; border: none;">Restart</button></a>
+    </footer>
+</body>
+</html>
