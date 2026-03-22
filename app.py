@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'doc', 'docx'}
-s
+
 app = Flask(__name__)
 app.secret_key = 'demo_secret_key_123' 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -62,7 +62,7 @@ def ask_question(q_id):
     return render_template('question.html', q_id=q_id, question=data['text'], 
                            description=html_desc, options=data.get('options', []), 
                            is_result=not data.get('options'), progress=progress,
-                           step=len(session.get('history', [])) + 1)
+                           step=len(session.get('history', [])) + 1, upload_enabled=data.get('upload_enabled', False))
 
 @app.route('/select/<current_id>/<next_id>/<path:choice_text>')
 def select_option(current_id, next_id, choice_text):
@@ -71,16 +71,7 @@ def select_option(current_id, next_id, choice_text):
     history = session.get('history', []); history.append(current_id)
     summary = session.get('summary', []); summary.append({"q": questions[current_id]['text'], "a": choice_text})
     session['history'], session['summary'] = history, summary
-    return redirect(url_for('ask_question', q_id=next_id)    {
-      "evidence_node": {
-        "text": "Upload your vaccination records",
-        "description": "Please upload your vaccination certificate or records.",
-        "upload_enabled": true,
-        "options": [
-          {"text": "Continue", "next_id": "next_step"}
-        ]
-      }
-    })
+    return redirect(url_for('ask_question', q_id=next_id))
 
 @app.route('/back')
 def go_back():
@@ -143,7 +134,7 @@ def edit_question(q_id=None):
         texts, targets = request.form.getlist('opt_text'), request.form.getlist('opt_target')
         options = [{"text": t, "next_id": tar} for t, tar in zip(texts, targets) if t.strip()]
         
-        questions[new_id] = {"text": request.form.get('text'), "description": request.form.get('description'), "options": options}
+        questions[new_id] = {"text": request.form.get('text'), "description": request.form.get('description'), "options": options, "upload_enabled": 'upload_enabled' in request.form}
         if q_id and q_id != new_id: del questions[q_id]
         save_questions(questions)
         return redirect(url_for('admin_dashboard'))
@@ -186,6 +177,7 @@ def upload_file(q_id):
             # Create unique filename with session ID
             session_id = session.get('session_id', 'default')
             unique_filename = f"{session_id}_{q_id}_{filename}"
+            os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
             file.save(file_path)
             
