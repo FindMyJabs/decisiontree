@@ -4,33 +4,37 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <script>mermaid.initialize({ startOnLoad: true });</script>
+    <style>
+        .btn-new { background-color: #28a745 !important; color: white !important; }
+        .btn-view { background-color: #17a2b8 !important; color: white !important; }
+        .action-edit { color: #005a9c; font-weight: bold; }
+        .action-del { color: #dc3545; font-weight: bold; }
+    </style>
 </head>
 <body>
     <h1>Workflow Map</h1>
-    <div class="mermaid" style="background:white;padding:20px;border:1px solid #ddd;border-radius:10px;">
-        {{ flowchart }}
-    </div>
+    <div class="mermaid" style="background:white;padding:20px;border:2px solid #005a9c;border-radius:10px;">{{ flowchart }}</div>
     <hr>
     {% if broken_links %}
-        <div style="background:#ffecec;color:#e00;padding:10px;border:1px solid #e00;">
-            <strong>Errors:</strong> <ul>{% for b in broken_links %}<li>{{ b }}</li>{% endfor %}</ul>
+        <div style="background:#f8d7da;color:#721c24;padding:15px;border:1px solid #f5c6cb;border-radius:5px;">
+            <strong>⚠️ Logic Errors:</strong> <ul>{% for b in broken_links %}<li>{{ b }}</li>{% endfor %}</ul>
         </div>
     {% endif %}
-    <div style="display:flex;gap:10px;margin:20px 0;">
-        <a href="{{ url_for('edit_question') }}"><button style="background:green;">+ New Step</button></a>
-        <a href="{{ url_for('index') }}"><button style="background:#444;">Live Site</button></a>
+    <div style="display:flex;gap:15px;margin:20px 0;">
+        <a href="{{ url_for('edit_question') }}"><button class="btn-new">+ Create New Node</button></a>
+        <a href="{{ url_for('index') }}"><button class="btn-view">View Live Site</button></a>
     </div>
     <table>
-        <thead><tr><th>ID</th><th>Text</th><th>Actions</th></tr></thead>
+        <thead><tr><th>ID</th><th>Text Preview</th><th>Actions</th></tr></thead>
         <tbody>
             {% for id, d in questions.items() %}
             <tr>
                 <td><code>{{ id }}</code></td>
                 <td>{{ d.text }}</td>
                 <td>
-                    <a href="{{ url_for('edit_question', q_id=id) }}">Edit</a> | 
+                    <a href="{{ url_for('edit_question', q_id=id) }}" class="action-edit">Edit</a> | 
                     <a href="{{ url_for('clone_question', q_id=id) }}">Clone</a> | 
-                    <a href="{{ url_for('delete_question', q_id=id) }}" style="color:red">Delete</a>
+                    <a href="{{ url_for('delete_question', q_id=id) }}" class="action-del">Delete</a>
                 </td>
             </tr>
             {% endfor %}
