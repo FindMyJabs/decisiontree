@@ -2,6 +2,13 @@
 <html>
 <head>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+    <style>
+        button { background-color: #005a9c; color: white !important; font-weight: bold; border: none; }
+        button:hover { background-color: #003d6b; }
+        .back-btn { background-color: #6c757d !important; }
+        .restart-btn { background-color: #dc3545 !important; }
+        .download-btn { background-color: #28a745 !important; margin: 5px; }
+    </style>
 </head>
 <body>
     <header>
@@ -9,20 +16,26 @@
     </header>
     <main>
         <h1>{{ question }}</h1>
-        {% if description %}<div style="background:#f9f9f9;padding:1rem;border-left:4px solid #0076d1;">{{ description | safe }}</div>{% endif %}
+        {% if description %}<div style="background:#f1f1f1;padding:1rem;border-left:5px solid #005a9c;color:#333;">{{ description | safe }}</div>{% endif %}
+        
         {% if not is_result %}
             {% for opt in options %}
                 <a href="{{ url_for('select_option', current_id=q_id, next_id=opt.next_id, choice_text=opt.text) }}">
-                    <button style="width:100%;text-align:left;margin-bottom:10px;">{{ opt.text }}</button>
+                    <button style="width:100%;text-align:left;padding:15px;">{{ opt.text }}</button>
                 </a>
             {% endfor %}
         {% else %}
-            <p>✅ <strong>Complete.</strong> Result reached.</p>
+            <div style="text-align: center; background: #e9f5ff; padding: 20px; border-radius: 10px;">
+                <h3>🎉 Path Complete</h3>
+                <p>Download your vaccination summary below:</p>
+                <a href="{{ url_for('download_results', fmt='txt') }}"><button class="download-btn">Save as .TXT</button></a>
+                <a href="{{ url_for('download_results', fmt='pdf') }}"><button class="download-btn">Save as .PDF</button></a>
+            </div>
         {% endif %}
     </main>
-    <footer>
-        {% if step > 1 %}<a href="{{ url_for('go_back') }}"><button style="background:#666;">Back</button></a>{% endif %}
-        <a href="{{ url_for('index') }}"><button style="background:#a00;">Restart</button></a>
+    <footer style="margin-top: 30px; display: flex; gap: 10px;">
+        {% if step > 1 %}<a href="{{ url_for('go_back') }}"><button class="back-btn">← Back</button></a>{% endif %}
+        <a href="{{ url_for('index') }}"><button class="restart-btn">Restart Quiz</button></a>
     </footer>
 </body>
 </html>
