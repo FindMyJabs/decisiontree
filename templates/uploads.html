@@ -2,6 +2,9 @@
 
 {% block content %}
 <h2>Upload Evidence</h2>
+<div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 5px; padding: 15px; margin-bottom: 20px; color: #856404;">
+    Warning: do not upload sensitive information. Uploads are stored locally and are not encrypted.
+</div>
 <form method="POST" enctype="multipart/form-data">
     <input type="file" name="file" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx">
     <button type="submit">Upload</button>
