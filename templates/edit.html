@@ -1,40 +1,39 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Editor</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
 </head>
 <body>
     <h1>{{ "Edit" if q_id else "Create" }} Node</h1>
     <form method="POST">
-        <label>Node ID (Must be unique, e.g. 'start')</label>
+        <label>Unique ID (One word, e.g. 'step1')</label>
         <input type="text" name="q_id" value="{{ q_id or '' }}" required>
-        <label>Heading Text</label>
+        <label>Question Heading</label>
         <input type="text" name="text" value="{{ data.text }}" required>
-        <label>Description (Markdown)</label>
+        <label>Full Content (Markdown)</label>
         <textarea name="description" rows="4">{{ data.description }}</textarea>
         <h3>Buttons / Pathing</h3>
         <div id="opts">
             {% for opt in data.options %}
-            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <div style="display:flex;gap:10px;margin-bottom:10px;background:#f0f0f0;padding:10px;">
                 <input type="text" name="opt_text" value="{{ opt.text }}" placeholder="Button Label">
-                <input type="text" name="opt_target" value="{{ opt.next_id }}" placeholder="Target ID">
+                <select name="opt_target">
+                    {% for eid in all_ids %}<option value="{{ eid }}" {% if opt.next_id == eid %}selected{% endif %}>{{ eid }}</option>{% endfor %}
+                </select>
             </div>
             {% endfor %}
         </div>
-        <button type="button" onclick="add()">+ Add Option</button>
+        <button type="button" onclick="add()">+ Add Path</button>
         <hr>
-        <button type="submit" style="background: green; color: white;">Save</button>
+        <button type="submit" style="background:green;">Save Node</button>
         <a href="{{ url_for('admin_dashboard') }}">Cancel</a>
     </form>
-    <div style="margin-top: 20px; font-size: 0.8rem; color: #666;">
-        <strong>Available IDs:</strong> {% for i in all_ids %}{{ i }}{% if not loop.last %}, {% endif %}{% endfor %}
-    </div>
     <script>
         function add() {
             const div = document.createElement('div');
-            div.style.display = 'flex'; div.style.gap = '10px'; div.style.marginBottom = '10px';
-            div.innerHTML = `<input type="text" name="opt_text" placeholder="Button Label"> <input type="text" name="opt_target" placeholder="Target ID">`;
+            div.style = "display:flex;gap:10px;margin-bottom:10px;background:#f0f0f0;padding:10px;";
+            div.innerHTML = `<input type="text" name="opt_text" placeholder="Label"> 
+                             <select name="opt_target">{% for eid in all_ids %}<option value="{{ eid }}">{{ eid }}</option>{% endfor %}</select>`;
             document.getElementById('opts').appendChild(div);
         }
     </script>
