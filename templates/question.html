@@ -32,6 +32,13 @@
                 <a href="{{ url_for('download_results', fmt='pdf') }}"><button class="download-btn">Save as .PDF</button></a>
             </div>
         {% endif %}
+        {% if upload_enabled %}
+<div class="upload-section">
+    <a href="{{ url_for('upload_file', q_id=q_id) }}" class="btn btn-secondary">
+        📎 Upload Evidence
+    </a>
+</div>
+{% endif %}
     </main>
     <footer style="margin-top: 30px; display: flex; gap: 10px;">
         {% if step > 1 %}<a href="{{ url_for('go_back') }}"><button class="back-btn">← Back</button></a>{% endif %}

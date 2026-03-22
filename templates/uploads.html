@@ -1,0 +1,10 @@
+{% extends "question.html" %}
+
+{% block content %}
+<h2>Upload Evidence</h2>
+<form method="POST" enctype="multipart/form-data">
+    <input type="file" name="file" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx">
+    <button type="submit">Upload</button>
+</form>
+<a href="{{ url_for('ask_question', q_id=q_id) }}">Skip Upload</a>
+{% endblock %}

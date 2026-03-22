@@ -2,9 +2,21 @@ import json
 import markdown
 from flask import Flask, render_template, redirect, url_for, session, Response, make_response, request, flash
 from fpdf import FPDF
+import os
+from werkzeug.utils import secure_filename
 
+UPLOAD_FOLDER = 'uploads'
+ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'doc', 'docx'}
+s
 app = Flask(__name__)
 app.secret_key = 'demo_secret_key_123' 
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 def load_questions():
     try:
@@ -59,7 +71,16 @@ def select_option(current_id, next_id, choice_text):
     history = session.get('history', []); history.append(current_id)
     summary = session.get('summary', []); summary.append({"q": questions[current_id]['text'], "a": choice_text})
     session['history'], session['summary'] = history, summary
-    return redirect(url_for('ask_question', q_id=next_id))
+    return redirect(url_for('ask_question', q_id=next_id)    {
+      "evidence_node": {
+        "text": "Upload your vaccination records",
+        "description": "Please upload your vaccination certificate or records.",
+        "upload_enabled": true,
+        "options": [
+          {"text": "Continue", "next_id": "next_step"}
+        ]
+      }
+    })
 
 @app.route('/back')
 def go_back():
@@ -73,12 +94,18 @@ def go_back():
 @app.route('/download/<fmt>')
 def download_results(fmt):
     summary = session.get('summary', [])
-    if not summary: return "No data to download. Start the quiz first!", 400
+    uploads = session.get('uploads', [])
     
     content = "DECISION SUMMARY\n" + "="*20 + "\n\n"
     for i, item in enumerate(summary, 1):
         content += f"{i}. {item['q']}\n   Choice: {item['a']}\n\n"
-        
+    
+    if uploads:
+        content += "UPLOADED EVIDENCE:\n" + "-"*18 + "\n"
+        for upload in uploads:
+            content += f"• {upload['original_name']} (for question: {upload['q_id']})\n"
+        content += "\n*Note: Files are stored locally and referenced in this summary*\n"
+    
     if fmt == 'txt':
         return Response(content, mimetype="text/plain", headers={"Content-disposition": "attachment; filename=results.txt"})
     
@@ -140,6 +167,41 @@ def delete_question(q_id):
         del questions[q_id]
         save_questions(questions)
     return redirect(url_for('admin_dashboard'))
+
+# --- FILE UPLOAD ROUTE ---
+@app.route('/upload/<q_id>', methods=['GET', 'POST'])
+def upload_file(q_id):
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file selected')
+            return redirect(request.url)
+        
+        file = request.files['file']
+        if file.filename == '':
+            flash('No file selected')
+            return redirect(request.url)
+        
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            # Create unique filename with session ID
+            session_id = session.get('session_id', 'default')
+            unique_filename = f"{session_id}_{q_id}_{filename}"
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+            file.save(file_path)
+            
+            # Store file reference in session
+            uploads = session.get('uploads', [])
+            uploads.append({
+                'q_id': q_id,
+                'filename': unique_filename,
+                'original_name': file.filename
+            })
+            session['uploads'] = uploads
+            
+            flash('File uploaded successfully')
+            return redirect(url_for('ask_question', q_id=q_id))
+    
+    return render_template('upload.html', q_id=q_id)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
