@@ -1,96 +1,127 @@
 {
-  "start": {
-    "text": "Check your UK Vaccination Status",
-    "description": "This tool helps you determine if you are up-to-date with your routine vaccinations in the UK.\n\n*Please note: This is a demo tool and not an official NHS service.*",
-    "options": [
-      { "text": "Start Checker", "next_id": "age_check" }
-    ]
-  },
-  "age_check": {
-    "text": "How old are you?",
-    "description": "Vaccination eligibility in the UK often depends on your age group.",
-    "options": [
-      { "text": "Under 18", "next_id": "under_18_path" },
-      { "text": "18 to 64", "next_id": "adult_path" },
-      { "text": "65 or over", "next_id": "senior_path" }
-    ]
-  },
-  "under_18_path": {
-    "text": "Have you completed your school-age vaccinations?",
-    "description": "This includes the 3-in-1 teenage booster (polio, diphtheria, and tetanus) and the MenACWY vaccine.\n\n[View the NHS vaccination schedule](https://www.nhs.uk/conditions/vaccinations/nhs-vaccination-schedule/)",
-    "options": [
-      { "text": "Yes, all done", "next_id": "result_young_up_to_date" },
-      { "text": "I'm not sure", "next_id": "result_check_red_book" }
-    ]
-  },
-  "adult_path": {
-    "text": "Do you have any underlying health conditions?",
-    "description": "Conditions include asthma, diabetes, or being immunosuppressed. This affects your eligibility for seasonal boosters.",
-    "options": [
-      { "text": "Yes, I have a condition", "next_id": "seasonal_check" },
-      { "text": "No, I am healthy", "next_id": "routine_check" }
-    ]
-  },
-  "senior_path": {
-    "text": "Have you had your seasonal Flu and COVID-19 boosters?",
-    "description": "Adults over 65 are eligible for free seasonal vaccinations every autumn/winter in the UK.",
-    "options": [
-      { "text": "Yes, I've had both", "next_id": "pneumococcal_check" },
-      { "text": "No, I missed them", "next_id": "result_book_nhs" }
-    ]
-  },
-  "seasonal_check": {
-    "text": "When was your last COVID-19 booster?",
-    "description": "Boosters are typically offered seasonally to those at higher risk.",
-    "options": [
-      { "text": "Within the last 6 months", "next_id": "result_adult_protected" },
-      { "text": "More than 6 months ago", "next_id": "result_book_nhs" }
-    ]
-  },
-  "routine_check": {
-    "text": "Are you up to date with MMR?",
-    "description": "The MMR (Measles, Mumps, and Rubella) vaccine is usually given in two doses during childhood.",
-    "options": [
-      { "text": "Yes, I've had two doses", "next_id": "result_adult_protected" },
-      { "text": "No / I don't know", "next_id": "result_check_gp" }
-    ]
-  },
-  "pneumococcal_check": {
-    "text": "Have you had the 'Pneumo' (PPV) vaccine?",
-    "description": "People aged 65 and over are eligible for a one-off pneumococcal polysaccharide vaccine (PPV).",
-    "options": [
-      { "text": "Yes, I've had it", "next_id": "result_senior_fully_protected" },
-      { "text": "No, never heard of it", "next_id": "result_book_nhs" }
-    ]
-  },
-  "result_young_up_to_date": {
-    "text": "You appear to be up to date!",
-    "description": "Based on your age, you have completed the standard UK childhood schedule. Keep an eye out for any future school-based invitations.",
-    "options": []
-  },
-  "result_check_red_book": {
-    "text": "Action Required: Check your records",
-    "description": "Ask your parents for your **Personal Child Health Record** (the 'Red Book') or contact your GP surgery to confirm your status.",
-    "options": []
-  },
-  "result_book_nhs": {
-    "text": "You may be eligible for a vaccination",
-    "description": "It looks like you might be missing a seasonal or age-related vaccine.\n\n[Book via the NHS App](https://www.nhs.uk/nhs-app/) or contact your local pharmacy.",
-    "options": []
-  },
-  "result_adult_protected": {
-    "text": "Status: Up to Date",
-    "description": "You have received your routine adult vaccinations. If you are planning to travel abroad, you may need additional travel-specific vaccines.",
-    "options": []
-  },
-  "result_senior_fully_protected": {
-    "text": "Excellent! You are fully protected",
-    "description": "You have completed your routine, seasonal, and one-off (PPV) vaccinations. Continue to attend your annual flu jab appointments.",
-    "options": []
-  },
-  "result_check_gp": {
-    "text": "Consult your GP",
-    "description": "If you missed vaccines as a child, you can catch up at any age on the NHS. Contact your GP surgery to arrange an appointment.",
-    "options": []
-  }
+    "start": {
+        "text": "Check your UK Vaccination Status",
+        "description": "This tool helps you determine if you are up-to-date with your routine vaccinations in the UK.\r\n\r\n\u26a0\ufe0f**Vaccinations are important**\u26a0\ufe0f  [Here is what you should know](https://www.immunology.org/public-information/vaccine-resources/childhood-vaccines/videos-about-vaccines/do-you-know-how)\r\n\r\n*Please note: This is a demo tool and not an official NHS service.*",
+        "options": [
+            {
+                "text": "Start Checker",
+                "next_id": "nhsid"
+            }
+        ]
+    },
+    "adult_path": {
+        "text": "Is this vaccination record up to date?",
+        "description": "Please review your vaccination record.\r\n\r\nBased on your knowledge, does this information look complete and up to date?",
+        "options": [
+            {
+                "text": "Yes, it's up to date",
+                "next_id": "result_senior_fully_protected"
+            },
+            {
+                "text": "No, it's incomplete",
+                "next_id": "routine_check"
+            },
+            {
+                "text": "I'm not sure",
+                "next_id": "result_check_gp"
+            }
+        ]
+    },
+    "routine_check": {
+        "text": "Do you have any additional vaccination information not in our records?",
+        "description": "This may include vaccines received in childhood or in other countries that are not recorded here.",
+        "options": [
+            {
+                "text": "Yes",
+                "next_id": "uploadvaccines"
+            },
+            {
+                "text": "No",
+                "next_id": "result_senior_fully_protected"
+            }
+        ]
+    },
+    "result_young_up_to_date": {
+        "text": "You appear to be up to date!",
+        "description": "Based on your age, you have completed the standard UK childhood schedule. Keep an eye out for any future school-based invitations.",
+        "options": []
+    },
+    "result_adult_protected": {
+        "text": "Status: Up to Date",
+        "description": "You have received your routine adult vaccinations. If you are planning to travel abroad, you may need additional travel-specific vaccines.",
+        "options": []
+    },
+    "result_senior_fully_protected": {
+        "text": "Your vaccination records are up to date!!!",
+        "description": "Based on your records, you may be due the following vaccines in line with the NHS vaccination programme.\r\n\r\nYou can learn more about recommended vaccines here: [NHS vaccinations and when to have them](https://www.nhs.uk/vaccinations/nhs-vaccinations-and-when-to-have-them/)",
+        "options": [
+            {
+                "text": "Now check your vaccination status",
+                "next_id": "compareyourrecords"
+            }
+        ]
+    },
+    "result_check_gp": {
+        "text": "Where to find your record!",
+        "description": "- **Check with a parent or guardian**\r\nThey may have a thing called a **Red Book**, a physical paper book used in the UK to track childhood health and vaccinations.\r\n\r\n- **NHS App**\r\nYou may be able to view your vaccination record through the NHS App.  \r\n[Find out more about the NHS App](https://www.nhs.uk/nhs-app/)\r\n\r\n- **Contact your GP practice**\r\nYour GP can access your NHS record and may be able to update it if you provide evidence of previous vaccinations.\r\n\r\n- **Child Health Information Services (CHIS)** \r\nIf you are in England, your childhood vaccination records may be held by your local CHIS.  \r\n[Learn more about CHIS](https://chis.scwcsu.nhs.uk/about/contact-us)\r\n\r\n- **Private healthcare providers**\r\nIf you received vaccinations privately, the provider may hold a record or be able to provide documentation.\r\n\r\n- **Occupational health services**\r\nIf you were vaccinated through work (e.g. healthcare roles), your employer or occupational health team may have records.\r\n\r\n- **Local vaccination services**\r\nSome areas (e.g. Cardiff) offer local services that may hold or provide vaccination records.\r\n",
+        "options": []
+    },
+    "nhsid": {
+        "text": "Do you have an NHS ID number?",
+        "description": "This is different from a NI number, and helps GP's get access to your records.\r\nWe need this information to check that we are providing you with the correct details:",
+        "options": [
+            {
+                "text": "Yes",
+                "next_id": "check_nhs_id"
+            },
+            {
+                "text": "No",
+                "next_id": "newpatient"
+            },
+            {
+                "text": "I don't know ",
+                "next_id": "findyournhsnumber"
+            }
+        ]
+    },
+    "check_nhs_id": {
+        "text": "Enter your NHS number to check your record",
+        "description": "If you have an NHS number, you can use it to check your vaccination record.\r\n\r\nFor this demonstration, you can use the example NHS number below:\r\n**9000000009**\r\n\r\nIf you do not know your NHS number, you can find it here:\r\n[Find your NHS number](https://www.nhs.uk/nhs-services/find-nhs-number/)",
+        "options": [
+            {
+                "text": "Continue",
+                "next_id": "adult_path"
+            }
+        ]
+    },
+    "newpatient": {
+        "text": "If you are new to the NHS",
+        "description": "If you are new to the UK or have not used the NHS before, you may not have an NHS number.\r\n\r\nTo access NHS services and build your health record, you will need to register with a GP. Once registered, you will be given an NHS number.\r\n\r\nIf you have received vaccinations outside the UK, these may not appear in your NHS record and you may need to share this information with your GP.\r\n\r\n**Register with a GP here:**\r\n[Find a GP](https://www.nhs.uk/service-search/find-a-gp/)",
+        "options": []
+    },
+    "findyournhsnumber": {
+        "text": "Find your NHS number",
+        "description": "If you have used the NHS before, you should already have an NHS number.\r\n\r\nYou can retrieve it online using the link below. This will allow you to access your health record and check your vaccination status.\r\n\r\n[Find your NHS number](https://www.nhs.uk/nhs-services/find-nhs-number/)\r\n\r\nIf you are unable to find your NHS number, you may wish to contact your GP practice for further assistance.",
+        "options": []
+    },
+    "uploadvaccines": {
+        "text": "Upload missing vaccination records ",
+        "description": "Please provide details here:",
+        "options": [
+            {
+                "text": "Confirm whether your record is complete",
+                "next_id": "result_senior_fully_protected"
+            }
+        ]
+    },
+    "compareyourrecords": {
+        "text": "Do your vaccination records match to the recommended program",
+        "description": "Recommended program for 17-20 year olds:\r\n",
+        "options": [
+            {
+                "text": "Yes! they all match up",
+                "next_id": "result_young_up_to_date"
+            }
+        ]
+    }
 }
