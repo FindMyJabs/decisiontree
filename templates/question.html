@@ -15,6 +15,7 @@
         <progress value="{{ progress }}" max="100"></progress>
     </header>
     <main>
+        {% block content %}
         <h1>{{ question }}</h1>
         {% if description %}<div style="background:#f1f1f1;padding:1rem;border-left:5px solid #005a9c;color:#333;">{{ description | safe }}</div>{% endif %}
         
@@ -32,6 +33,14 @@
                 <a href="{{ url_for('download_results', fmt='pdf') }}"><button class="download-btn">Save as .PDF</button></a>
             </div>
         {% endif %}
+        {% if upload_enabled %}
+<div class="upload-section">
+    <a href="{{ url_for('upload_file', q_id=q_id) }}" class="btn btn-secondary">
+        📎 Upload Evidence
+    </a>
+</div>
+{% endif %}
+        {% endblock %}
     </main>
     <footer style="margin-top: 30px; display: flex; gap: 10px;">
         {% if step > 1 %}<a href="{{ url_for('go_back') }}"><button class="back-btn">← Back</button></a>{% endif %}

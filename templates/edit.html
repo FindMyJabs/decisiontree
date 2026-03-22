@@ -12,6 +12,7 @@
         <input type="text" name="text" value="{{ data.text }}" required>
         <label>Full Content (Markdown)</label>
         <textarea name="description" rows="4">{{ data.description }}</textarea>
+        <label><input type="checkbox" name="upload_enabled" {% if data.upload_enabled %}checked{% endif %}> Enable file upload for this question</label>
         <h3>Buttons / Pathing</h3>
         <div id="opts">
             {% for opt in data.options %}

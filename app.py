@@ -2,9 +2,21 @@ import json
 import markdown
 from flask import Flask, render_template, redirect, url_for, session, Response, make_response, request, flash
 from fpdf import FPDF
+import os
+from werkzeug.utils import secure_filename
+
+UPLOAD_FOLDER = 'uploads'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
 app = Flask(__name__)
 app.secret_key = 'demo_secret_key_123' 
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 def load_questions():
     try:
@@ -35,13 +47,14 @@ def get_time_estimate(q_id, questions, memo=None):
 # --- USER ROUTES ---
 @app.route('/')
 def index():
-    session['history'], session['summary'] = [], []
+    session['history'], session['summary'], session['uploads'] = [], [], []
     return redirect(url_for('ask_question', q_id='start'))
 
 @app.route('/question/<q_id>')
 def ask_question(q_id):
     questions = load_questions()
     data = questions.get(q_id)
+    print(f"\n>>> ask_question: q_id={q_id}, data={data}")
     if not data: return f"Error: ID '{q_id}' not found.", 404
     
     html_desc = markdown.markdown(data.get('description', ""))
@@ -50,7 +63,7 @@ def ask_question(q_id):
     return render_template('question.html', q_id=q_id, question=data['text'], 
                            description=html_desc, options=data.get('options', []), 
                            is_result=not data.get('options'), progress=progress,
-                           step=len(session.get('history', [])) + 1)
+                           step=len(session.get('history', [])) + 1, upload_enabled=data.get('upload_enabled', False))
 
 @app.route('/select/<current_id>/<next_id>/<path:choice_text>')
 def select_option(current_id, next_id, choice_text):
@@ -73,18 +86,36 @@ def go_back():
 @app.route('/download/<fmt>')
 def download_results(fmt):
     summary = session.get('summary', [])
-    if not summary: return "No data to download. Start the quiz first!", 400
+    if not summary:
+        return "No data to download. Start the quiz first!", 400
+    uploads = session.get('uploads', [])
     
     content = "DECISION SUMMARY\n" + "="*20 + "\n\n"
     for i, item in enumerate(summary, 1):
         content += f"{i}. {item['q']}\n   Choice: {item['a']}\n\n"
+    
+    if uploads:
+        content += "UPLOADED EVIDENCE:\n" + "-"*18 + "\n"
+        for upload in uploads:
+            content += f"- {upload['original_name']} (for question: {upload['q_id']})\n"
+
         
+    
     if fmt == 'txt':
         return Response(content, mimetype="text/plain", headers={"Content-disposition": "attachment; filename=results.txt"})
     
-    pdf = FPDF(); pdf.add_page(); pdf.set_font("Arial", size=12)
+    pdf = FPDF(); pdf.add_page(); pdf.set_font("Helvetica", size=12)
     pdf.multi_cell(0, 10, content)
-    response = make_response(pdf.output(dest='S').encode('latin-1'))
+    
+    # Add uploaded images to the PDF
+    for upload in uploads:
+        filename = upload['filename']
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')) and os.path.exists(filepath):
+            pdf.add_page()
+            pdf.image(filepath, x=10, y=10, w=180)  #IU Adjust size as needed
+    
+    response = make_response(pdf.output(dest='S'))
     response.headers.set('Content-Type', 'application/pdf')
     response.headers.set('Content-Disposition', 'attachment', filename='results.pdf')
     return response
@@ -116,7 +147,7 @@ def edit_question(q_id=None):
         texts, targets = request.form.getlist('opt_text'), request.form.getlist('opt_target')
         options = [{"text": t, "next_id": tar} for t, tar in zip(texts, targets) if t.strip()]
         
-        questions[new_id] = {"text": request.form.get('text'), "description": request.form.get('description'), "options": options}
+        questions[new_id] = {"text": request.form.get('text'), "description": request.form.get('description'), "options": options, "upload_enabled": 'upload_enabled' in request.form}
         if q_id and q_id != new_id: del questions[q_id]
         save_questions(questions)
         return redirect(url_for('admin_dashboard'))
@@ -140,6 +171,57 @@ def delete_question(q_id):
         del questions[q_id]
         save_questions(questions)
     return redirect(url_for('admin_dashboard'))
+
+# --- FILE UPLOAD ROUTE ---
+@app.route('/upload/<q_id>', methods=['GET', 'POST'])
+def upload_file(q_id):
+    print(f"\n{'='*50}")
+    print(f"upload_file() called - q_id={q_id}, method={request.method}")
+    print(f"request.files: {request.files}")
+    print(f"request.form: {request.form}")
+    print(f"{'='*50}\n")
+    if request.method == 'POST':
+        print(f"Upload POST received for q_id: {q_id}")
+        if 'file' not in request.files:
+            print("No 'file' in request.files")
+            flash('No file selected')
+            return redirect(request.url)
+        
+        file = request.files['file']
+        print(f"File object: {file}, filename: {file.filename}")
+        if file.filename == '':
+            print("Filename is empty")
+            flash('No file selected')
+            return redirect(request.url)
+        
+        if file and allowed_file(file.filename):
+            print(f"File allowed: {file.filename}")
+            filename = secure_filename(file.filename)
+            # Create unique filename with session ID
+            session_id = session.get('session_id', 'default')
+            unique_filename = f"{session_id}_{q_id}_{filename}"
+            os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+            print(f"Saving to: {file_path}")
+            file.save(file_path)
+            print("File saved successfully")
+            
+            # Store file reference in session
+            uploads = session.get('uploads', [])
+            uploads.append({
+                'q_id': q_id,
+                'filename': unique_filename,
+                'original_name': file.filename
+            })
+            session['uploads'] = uploads
+            print(f"Session uploads updated: {session['uploads']}")
+            
+            flash('File uploaded successfully')
+            return redirect(url_for('ask_question', q_id=q_id))
+        else:
+            print(f"File not allowed or invalid: {file.filename}")
+    
+    return render_template('uploads.html', q_id=q_id, step=len(session.get('history', [])) + 1)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
