@@ -11,24 +11,26 @@ def load_questions():
         with open('questions.json', 'r') as f:
             return json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
-        # Default starting point if file is missing or empty
         return {"start": {"text": "Welcome", "description": "Use /admin to create content.", "options": []}}
 
 def save_questions(questions):
     with open('questions.json', 'w') as f:
         json.dump(questions, f, indent=4)
 
-def generate_flowchart_data(questions):
-    """Generates Mermaid.js syntax for the visualizer."""
-    lines = ["graph TD"]
-    for q_id, data in questions.items():
-        clean_text = data['text'].replace('"', "'")
-        lines.append(f'    {q_id}["{clean_text}"]')
-        for opt in data.get('options', []):
-            target = opt['next_id']
-            link_text = opt['text'].replace('"', "'")
-            lines.append(f'    {q_id} -- "{link_text}" --> {target}')
-    return "\n".join(lines)
+# --- TREE LOGIC ---
+def get_time_estimate(q_id, questions, memo=None):
+    if memo is None: memo = {}
+    if q_id in memo: return memo[q_id]
+    node = questions.get(q_id)
+    if not node or not node.get('options'): return 0, 0
+    mins, maxs = [], []
+    for opt in node['options']:
+        low, high = get_time_estimate(opt['next_id'], questions, memo)
+        mins.append(low)
+        maxs.append(high)
+    res = (1 + min(mins), 1 + max(maxs))
+    memo[q_id] = res
+    return res
 
 # --- USER ROUTES ---
 @app.route('/')
@@ -42,7 +44,6 @@ def ask_question(q_id):
     data = questions.get(q_id)
     if not data: return f"Error: ID '{q_id}' not found.", 404
     
-    # Progress & Metadata
     html_desc = markdown.markdown(data.get('description', ""))
     progress = min((len(session.get('history', [])) / 5) * 100, 100)
     
@@ -54,6 +55,7 @@ def ask_question(q_id):
 @app.route('/select/<current_id>/<next_id>/<path:choice_text>')
 def select_option(current_id, next_id, choice_text):
     questions = load_questions()
+    # Save to history for 'Back' and summary for 'Download'
     history = session.get('history', []); history.append(current_id)
     summary = session.get('summary', []); summary.append({"q": questions[current_id]['text'], "a": choice_text})
     session['history'], session['summary'] = history, summary
@@ -68,11 +70,36 @@ def go_back():
         return redirect(url_for('ask_question', q_id=last_id))
     return redirect(url_for('index'))
 
-# --- ADMIN & CMS ROUTES ---
+@app.route('/download/<fmt>')
+def download_results(fmt):
+    summary = session.get('summary', [])
+    if not summary: return "No data to download. Start the quiz first!", 400
+    
+    content = "DECISION SUMMARY\n" + "="*20 + "\n\n"
+    for i, item in enumerate(summary, 1):
+        content += f"{i}. {item['q']}\n   Choice: {item['a']}\n\n"
+        
+    if fmt == 'txt':
+        return Response(content, mimetype="text/plain", headers={"Content-disposition": "attachment; filename=results.txt"})
+    
+    pdf = FPDF(); pdf.add_page(); pdf.set_font("Arial", size=12)
+    pdf.multi_cell(0, 10, content)
+    response = make_response(pdf.output(dest='S').encode('latin-1'))
+    response.headers.set('Content-Type', 'application/pdf')
+    response.headers.set('Content-Disposition', 'attachment', filename='results.pdf')
+    return response
+
+# --- ADMIN ROUTES ---
 @app.route('/admin')
 def admin_dashboard():
     questions = load_questions()
-    flowchart = generate_flowchart_data(questions)
+    lines = ["graph TD"]
+    for qid, d in questions.items():
+        lines.append(f' {qid}["{d["text"][:30]}..."]')
+        for o in d.get('options', []):
+            lines.append(f' {qid} -- "{o["text"]}" --> {o["next_id"]}')
+    flowchart = "\n".join(lines)
+    
     broken_links = [f"'{qid}' links to missing '{o['next_id']}'" 
                     for qid, d in questions.items() 
                     for o in d.get('options', []) if o['next_id'] not in questions]
