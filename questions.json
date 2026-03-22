@@ -1,0 +1,96 @@
+{
+  "start": {
+    "text": "Check your UK Vaccination Status",
+    "description": "This tool helps you determine if you are up-to-date with your routine vaccinations in the UK.\n\n*Please note: This is a demo tool and not an official NHS service.*",
+    "options": [
+      { "text": "Start Checker", "next_id": "age_check" }
+    ]
+  },
+  "age_check": {
+    "text": "How old are you?",
+    "description": "Vaccination eligibility in the UK often depends on your age group.",
+    "options": [
+      { "text": "Under 18", "next_id": "under_18_path" },
+      { "text": "18 to 64", "next_id": "adult_path" },
+      { "text": "65 or over", "next_id": "senior_path" }
+    ]
+  },
+  "under_18_path": {
+    "text": "Have you completed your school-age vaccinations?",
+    "description": "This includes the 3-in-1 teenage booster (polio, diphtheria, and tetanus) and the MenACWY vaccine.\n\n[View the NHS vaccination schedule](https://www.nhs.uk/conditions/vaccinations/nhs-vaccination-schedule/)",
+    "options": [
+      { "text": "Yes, all done", "next_id": "result_young_up_to_date" },
+      { "text": "I'm not sure", "next_id": "result_check_red_book" }
+    ]
+  },
+  "adult_path": {
+    "text": "Do you have any underlying health conditions?",
+    "description": "Conditions include asthma, diabetes, or being immunosuppressed. This affects your eligibility for seasonal boosters.",
+    "options": [
+      { "text": "Yes, I have a condition", "next_id": "seasonal_check" },
+      { "text": "No, I am healthy", "next_id": "routine_check" }
+    ]
+  },
+  "senior_path": {
+    "text": "Have you had your seasonal Flu and COVID-19 boosters?",
+    "description": "Adults over 65 are eligible for free seasonal vaccinations every autumn/winter in the UK.",
+    "options": [
+      { "text": "Yes, I've had both", "next_id": "pneumococcal_check" },
+      { "text": "No, I missed them", "next_id": "result_book_nhs" }
+    ]
+  },
+  "seasonal_check": {
+    "text": "When was your last COVID-19 booster?",
+    "description": "Boosters are typically offered seasonally to those at higher risk.",
+    "options": [
+      { "text": "Within the last 6 months", "next_id": "result_adult_protected" },
+      { "text": "More than 6 months ago", "next_id": "result_book_nhs" }
+    ]
+  },
+  "routine_check": {
+    "text": "Are you up to date with MMR?",
+    "description": "The MMR (Measles, Mumps, and Rubella) vaccine is usually given in two doses during childhood.",
+    "options": [
+      { "text": "Yes, I've had two doses", "next_id": "result_adult_protected" },
+      { "text": "No / I don't know", "next_id": "result_check_gp" }
+    ]
+  },
+  "pneumococcal_check": {
+    "text": "Have you had the 'Pneumo' (PPV) vaccine?",
+    "description": "People aged 65 and over are eligible for a one-off pneumococcal polysaccharide vaccine (PPV).",
+    "options": [
+      { "text": "Yes, I've had it", "next_id": "result_senior_fully_protected" },
+      { "text": "No, never heard of it", "next_id": "result_book_nhs" }
+    ]
+  },
+  "result_young_up_to_date": {
+    "text": "You appear to be up to date!",
+    "description": "Based on your age, you have completed the standard UK childhood schedule. Keep an eye out for any future school-based invitations.",
+    "options": []
+  },
+  "result_check_red_book": {
+    "text": "Action Required: Check your records",
+    "description": "Ask your parents for your **Personal Child Health Record** (the 'Red Book') or contact your GP surgery to confirm your status.",
+    "options": []
+  },
+  "result_book_nhs": {
+    "text": "You may be eligible for a vaccination",
+    "description": "It looks like you might be missing a seasonal or age-related vaccine.\n\n[Book via the NHS App](https://www.nhs.uk/nhs-app/) or contact your local pharmacy.",
+    "options": []
+  },
+  "result_adult_protected": {
+    "text": "Status: Up to Date",
+    "description": "You have received your routine adult vaccinations. If you are planning to travel abroad, you may need additional travel-specific vaccines.",
+    "options": []
+  },
+  "result_senior_fully_protected": {
+    "text": "Excellent! You are fully protected",
+    "description": "You have completed your routine, seasonal, and one-off (PPV) vaccinations. Continue to attend your annual flu jab appointments.",
+    "options": []
+  },
+  "result_check_gp": {
+    "text": "Consult your GP",
+    "description": "If you missed vaccines as a child, you can catch up at any age on the NHS. Contact your GP surgery to arrange an appointment.",
+    "options": []
+  }
+}
