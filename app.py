@@ -193,7 +193,7 @@ def upload_file(q_id):
             flash('File uploaded successfully')
             return redirect(url_for('ask_question', q_id=q_id))
     
-    return render_template('upload.html', q_id=q_id)
+    return render_template('uploads.html', q_id=q_id)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
